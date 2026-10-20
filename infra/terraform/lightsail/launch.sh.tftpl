@@ -1,0 +1,69 @@
+#!/bin/bash
+# Lightsail launch script (run once by cloud-init as root). Rendered by Terraform: no secrets in here.
+# Creates a non-root deploy user, disables SSH password login, enables unattended upgrades and installs Docker.
+set -euo pipefail
+exec > >(tee -a /var/log/decisionops-launch.log) 2>&1
+export DEBIAN_FRONTEND=noninteractive
+
+DEPLOY_USER="${deploy_user}"
+
+# 1. Deploy user: key-only login (copies the Lightsail key from the default ubuntu user), passwordless sudo.
+if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
+  useradd --create-home --shell /bin/bash "$DEPLOY_USER"
+fi
+install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "/home/$DEPLOY_USER/.ssh"
+install -m 600 -o "$DEPLOY_USER" -g "$DEPLOY_USER" /home/ubuntu/.ssh/authorized_keys "/home/$DEPLOY_USER/.ssh/authorized_keys"
+echo "$DEPLOY_USER ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/90-$DEPLOY_USER"
+chmod 440 "/etc/sudoers.d/90-$DEPLOY_USER"
+
+# 2. SSH hardening.
+cat > /etc/ssh/sshd_config.d/90-decisionops.conf <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+EOF
+systemctl reload ssh || systemctl reload sshd
+
+# 3. Security updates applied automatically.
+apt-get update
+apt-get -y upgrade
+apt-get install -y unattended-upgrades ca-certificates curl
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+EOF
+
+%{ if with_disk ~}
+# 4. Optional data disk for Docker volumes. Terraform attaches it after launch, so wait for the device.
+DEV=""
+for _ in $(seq 1 120); do
+  for d in /dev/xvdf /dev/nvme1n1; do [ -b "$d" ] && DEV="$d" && break; done
+  [ -n "$DEV" ] && break
+  sleep 5
+done
+if [ -z "$DEV" ]; then
+  echo "Data disk not found after 10 minutes; Docker will use the root disk. Mount it manually (docs/guides/deployment.md)."
+else
+  blkid "$DEV" >/dev/null 2>&1 || mkfs.ext4 -L decisionops-data "$DEV"
+  mkdir -p /srv/docker
+  echo "LABEL=decisionops-data /srv/docker ext4 defaults,nofail 0 2" >> /etc/fstab
+  mount /srv/docker
+  mkdir -p /etc/docker
+  echo '{"data-root": "/srv/docker"}' > /etc/docker/daemon.json
+fi
+%{ endif ~}
+
+# 5. Docker Engine + Compose plugin from Docker's official apt repository.
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+. /etc/os-release
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" \
+  > /etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+usermod -aG docker "$DEPLOY_USER"
+systemctl enable --now docker
+
+install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" /opt/decisionops
+echo "Launch script finished. Next: copy the app and .env to /opt/decisionops as $DEPLOY_USER (docs/guides/deployment.md)."

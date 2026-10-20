@@ -1,0 +1,144 @@
+# Investment DecisionOps AI — local baseline.
+#   docker compose up --build        → http://127.0.0.1:8087  (APP_PORT)
+# Only the web service publishes a port, bound to 127.0.0.1. `docker compose down` keeps data;
+# `docker compose down -v` DELETES personal data (volumes).
+name: decisionops
+
+x-app-env: &app-env
+  APP_PROFILE: owner
+  DATABASE_URL: postgresql+psycopg://decisionops:${APP_DB_PASSWORD:-change-me-app-db}@db:5432/decisionops
+  SECRET_KEY: ${SECRET_KEY:-}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+  INITIAL_SETUP_TOKEN: ${INITIAL_SETUP_TOKEN:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  LIVE_TRADING_ENABLED: "false"
+  EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+  MODEL_NAME: ${MODEL_NAME:-qwen3:4b}
+  MODEL_STEP_TIMEOUT_SECONDS: ${MODEL_STEP_TIMEOUT_SECONDS:-300}
+  ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID:-}
+  ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID:-}
+  ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET:-}
+  IBKR_HOST: ${IBKR_HOST:-}
+  IBKR_PAPER_PORT: ${IBKR_PAPER_PORT:-4002}
+  BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  HOME: /home/app
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-change-me-superuser}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app-db}
+      DEMO_OWNER_PASSWORD: ${DEMO_OWNER_PASSWORD:-change-me-demo-owner}
+      DEMO_RO_PASSWORD: ${DEMO_RO_PASSWORD:-change-me-demo-ro}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d decisionops"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    stop_grace_period: 30s
+
+  migrate:
+    build: {context: ., dockerfile: backend/Dockerfile, target: runtime}
+    image: decisionops-app:local
+    environment:
+      <<: *app-env
+      DEMO_MIGRATE_URL: postgresql+psycopg://demo_owner:${DEMO_OWNER_PASSWORD:-change-me-demo-owner}@db:5432/decisionops_demo
+      # First-run owner bootstrap (only this one-shot service sees it) and the published read-only demo account
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+      OWNER_DISPLAY_NAME: ${OWNER_DISPLAY_NAME:-Owner}
+      OWNER_TIMEZONE: ${OWNER_TIMEZONE:-Asia/Jerusalem}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@example.com}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo-read-only}
+    command:
+      - sh
+      - -c
+      - >-
+        python -m app.cli migrate --seed owner &&
+        DATABASE_URL="$$DEMO_MIGRATE_URL" DATA_DIR=/tmp/demo-data python -m app.cli migrate --seed demo
+    volumes:
+      - appdata:/data
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  api:
+    image: decisionops-app:local
+    restart: unless-stopped
+    environment: *app-env
+    volumes:
+      - appdata:/data
+      - ./backups:/backups:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health/ready"]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+
+  worker:
+    image: decisionops-app:local
+    restart: unless-stopped
+    environment: *app-env
+    command: ["python", "-m", "app.worker.main"]
+    volumes:
+      - appdata:/data
+      - ./backups:/backups:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    stop_grace_period: 60s
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+
+  # Isolated, read-only demo: separate database and read-only DB role, Mock adapters only,
+  # no uploads volume, no integration secrets in its environment.
+  api-demo:
+    image: decisionops-app:local
+    restart: unless-stopped
+    environment:
+      APP_PROFILE: demo
+      DATABASE_URL: postgresql+psycopg://demo_ro:${DEMO_RO_PASSWORD:-change-me-demo-ro}@db:5432/decisionops_demo
+      DATA_DIR: /tmp/demo-data
+      HOME: /home/app
+      LIVE_TRADING_ENABLED: "false"
+    read_only: true
+    tmpfs: ["/tmp", "/home/app"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health/ready"]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+
+  web:
+    build: {context: ., dockerfile: frontend/Dockerfile}
+    image: decisionops-web:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8087}:8080"
+    depends_on:
+      api: {condition: service_started}
+      api-demo: {condition: service_started}
+
+  # Optional: Ollama in a container for Linux/NVIDIA hosts. NOT used on Windows/Intel iGPU machines, where the
+  # host-native Ollama is reached through host.docker.internal instead.
+  ollama:
+    image: ollama/ollama:0.40.4  # same version as the host client recorded in PROJECT_PLAN §11.2
+    profiles: ["llm"]
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  pgdata:
+  appdata:
+  ollama:

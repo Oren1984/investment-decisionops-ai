@@ -1,0 +1,17 @@
+# Reviewed Trivy exceptions (used by scripts/check for the pass/fail decision; every finding is still listed).
+# Each entry expires so it is re-reviewed. Details: docs/security/dependency-findings.md
+vulnerabilities:
+  # Go stdlib / x/net inside the official caddy:2.11.7-alpine binary (latest release, built with Go 1.26.8).
+  # Fixed by Go 1.26.9; clears with the next Caddy release. Locally Caddy listens on 127.0.0.1 only.
+  - id: CVE-2026-78667
+    paths: ["usr/bin/caddy"]
+    statement: "Upstream Caddy binary; awaiting a Caddy release built with Go >= 1.26.9"
+    expired_at: 2026-12-31
+  - id: CVE-2026-78669
+    paths: ["usr/bin/caddy"]
+    statement: "Upstream Caddy binary; awaiting a Caddy release built with Go >= 1.26.9 / x/net 0.60.0"
+    expired_at: 2026-12-31
+  - id: CVE-2026-97031
+    paths: ["usr/bin/caddy"]
+    statement: "Upstream Caddy binary; awaiting a Caddy release built with Go >= 1.26.9"
+    expired_at: 2026-12-31

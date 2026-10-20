@@ -1,0 +1,19 @@
+{
+  "_about": "Labelled answer statements for the lexical-support heuristic (plan §10.4). Each cites the passage identified by [document, phrase]. 'unsupported': true statements are deliberately not supported by the cited passage. The heuristic's flag rate and misses are reported, not gated at 100%.",
+  "statements": [
+    {"text": "Data-center revenue grew 52% year over year in the latest quarter.", "cite": ["nvda-sample-note.md", "grew 38%"], "unsupported": true},
+    {"text": "The stock trades at 45 times forward earnings.", "cite": ["nvda-sample-note.md", "31 times forward earnings"], "unsupported": true},
+    {"text": "Management announced a large share buyback and a dividend increase.", "cite": ["nvda-sample-note.md", "31 times forward earnings"], "unsupported": true},
+    {"text": "Quantum computing breakthroughs threaten the company's moat.", "cite": ["nvda-sample-note.md", "export restrictions"], "unsupported": true},
+    {"text": "The policy allows leverage up to twice the portfolio value.", "cite": ["portfolio-policy.md", "No leverage"], "unsupported": true},
+    {"text": "Friday sessions on TASE close at 15:30 Israel time.", "cite": ["tase-banks-sample.md", "13:50"], "unsupported": true},
+    {"text": "Bank dividends were cut sharply after regulators intervened.", "cite": ["tase-banks-sample.md", "payout ratios"], "unsupported": true},
+    {"text": "Hybrid vehicles made up 60% of Toyota's global sales.", "cite": ["japan-autos-sample.md", "41%"], "unsupported": true},
+    {"text": "Electric pickup trucks dominate the automaker's European expansion plans.", "cite": ["japan-autos-sample.md", "Tariffs on vehicle imports"], "unsupported": true},
+    {"text": "The shekel weakened because of capital outflows from the technology sector.", "cite": ["fx-usdils-outlook.md", "technology-sector inflows"], "unsupported": true},
+    {"text": "Data-center revenue grew 38% year over year while gaming revenue was flat.", "cite": ["nvda-sample-note.md", "grew 38%"], "unsupported": false},
+    {"text": "No single stock should exceed 10% of the portfolio.", "cite": ["portfolio-policy.md", "No single stock above 10%"], "unsupported": false},
+    {"text": "Net interest margins would compress if the Bank of Israel cuts rates.", "cite": ["tase-banks-sample.md", "Net interest margins"], "unsupported": false},
+    {"text": "A weaker yen boosts reported profits for Toyota.", "cite": ["japan-autos-sample.md", "weaker yen boosts"], "unsupported": false}
+  ]
+}

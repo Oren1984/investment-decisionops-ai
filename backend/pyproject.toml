@@ -1,0 +1,63 @@
+[project]
+name = "decisionops"
+version = "1.0.0"
+description = "Investment DecisionOps AI — personal investment decision workspace (backend)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.147.0",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.12.5",
+  "pydantic-settings==2.16.0",
+  "sqlalchemy==2.1.5",
+  "alembic==1.20.0",
+  "psycopg[binary]==3.3.6",
+  "pgvector==0.5.1",
+  "argon2-cffi>=25.1",
+  "pyotp>=2.9",
+  "cryptography>=46",
+  "python-multipart>=0.0.20",
+  "structlog>=25.4",
+  "httpx>=0.28",
+  "exchange-calendars==4.13.2",
+  "pypdf>=6.0",
+  "mcp==1.28.1",
+  "crewai[litellm]==1.15.28",
+  "ib-async==2.1.0",
+  "json-repair>=0.50",
+  "email-validator>=2.2",
+]
+
+[project.optional-dependencies]
+embeddings = ["fastembed==0.9.0"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4",
+  "time-machine>=2.19",
+  "hypothesis>=6.140",
+  "ruff>=0.14",
+  "pip-audit>=2.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "S", "UP"]
+ignore = ["S101", "S311", "B008", "E501", "S608", "S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S107", "S108"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+  "model: requires a running local Ollama model (skipped otherwise)",
+]

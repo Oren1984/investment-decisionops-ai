@@ -1,0 +1,75 @@
+# Build context = repository root (compose.yaml). The images need only backend/, help/, seed/, frontend/ sources
+# and deploy/ (Caddyfile, starting page). Everything private, generated or unrelated stays out.
+
+# Secrets, credentials and personal account files
+.env
+.env.*
+*.env
+!.env.example
+.admin-user
+.admin-user.*
+*.admin-user
+secrets/
+*.local.md
+*login*.txt
+*credentials*.txt
+*.pem
+*.key
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+encryption.key
+
+# VCS, personal data, runtime state
+.git
+.gitignore
+backups/
+data/
+*.dump
+*.sql.gz
+
+# Logs, temporary and debug files
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.swp
+_repro*
+
+# Dependencies, caches, build output (rebuilt inside the image)
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.hypothesis
+**/*.tsbuildinfo
+frontend/dist
+
+# Test credentials and generated test reports
+frontend/e2e/.auth
+frontend/test-results
+frontend/playwright-report
+frontend/blob-report
+**/coverage
+**/htmlcov
+junit*.xml
+
+# Local-only project notes (also covered by docs/ below; listed explicitly so it stays out if docs/ is ever needed)
+docs/internal/
+
+# Not needed in any image
+infra/
+docs/
+scripts/
+*.md
+!help/**/*.md
+!seed/**/*.md
+.vscode/
+.idea/

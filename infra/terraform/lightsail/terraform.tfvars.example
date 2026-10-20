@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. No secrets belong here.
+aws_region        = "eu-central-1"
+availability_zone = "eu-central-1a"
+name              = "decisionops"
+bundle_id         = "medium_3_0"   # 2 vCPU / 4 GB / 80 GB SSD — verify with `aws lightsail get-bundles`
+blueprint_id      = "ubuntu_24_04" # verify with `aws lightsail get-blueprints`
+
+ssh_public_key    = "ssh-ed25519 AAAA...replace-with-your-public-key owner@laptop"
+ssh_allowed_cidrs = ["203.0.113.10/32"] # your own public IP(s); 0.0.0.0/0 is rejected
+
+deploy_user        = "deploy"
+auto_snapshot_time = "02:00" # UTC
+data_disk_size_gb  = 0       # e.g. 40 for a separate disk holding Docker volumes

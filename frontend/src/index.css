@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Design tokens: one palette, two themes. Restrained, high-contrast, no glow. */
+:root,
+[data-theme="dark"] {
+  --app-bg: #0a0f1a;
+  --app-surface: #0f1626;
+  --app-surface-2: #152036;
+  --app-line: #24324d;
+  --app-fg: #e6edf7;
+  --app-muted: #93a3bc;
+  --app-accent: #38bdf8;
+  --app-accent-fg: #04121f;
+  --app-good: #34d399;
+  --app-warn: #fbbf24;
+  --app-bad: #f87171;
+  --app-model: #b4a2fb;
+  --app-computed: #6aa8fa;
+  --app-simulated: #a3b1c6;
+  --app-focus: #7dd3fc;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --app-bg: #f4f6fa;
+  --app-surface: #ffffff;
+  --app-surface-2: #eef2f8;
+  --app-line: #d5dce8;
+  --app-fg: #0f172a;
+  --app-muted: #536179;
+  --app-accent: #0369a1;
+  --app-accent-fg: #ffffff;
+  --app-good: #047857;
+  --app-warn: #a15c07;
+  --app-bad: #b91c1c;
+  --app-model: #6d28d9;
+  --app-computed: #1d4ed8;
+  --app-simulated: #475569;
+  --app-focus: #0369a1;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-line: var(--app-line);
+  --color-fg: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-accent: var(--app-accent);
+  --color-accent-fg: var(--app-accent-fg);
+  --color-good: var(--app-good);
+  --color-warn: var(--app-warn);
+  --color-bad: var(--app-bad);
+  --color-model: var(--app-model);
+  --color-computed: var(--app-computed);
+  --color-simulated: var(--app-simulated);
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+:focus-visible {
+  outline: 2px solid var(--app-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 8px;
+  background: var(--app-surface);
+  padding: 8px 12px;
+  border: 1px solid var(--app-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.prose-help h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 0.75rem; }
+.prose-help h2 { font-size: 1.1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+.prose-help h3 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.4rem; }
+.prose-help p { margin: 0.5rem 0; }
+.prose-help ul, .prose-help ol { margin: 0.5rem 0 0.5rem 1.25rem; }
+.prose-help ul { list-style: disc; }
+.prose-help ol { list-style: decimal; }
+.prose-help li { margin: 0.25rem 0; }
+.prose-help li > ul, .prose-help li > ol { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.prose-help li > ul { list-style: circle; }
+.prose-help code { font-family: var(--font-mono); font-size: 0.85em; background: var(--app-surface-2); padding: 0.1em 0.3em; border-radius: 4px; }
+.prose-help a { color: var(--app-accent); text-decoration: underline; }
+.prose-help table { border-collapse: collapse; margin: 0.75rem 0; }
+.prose-help th, .prose-help td { border: 1px solid var(--app-line); padding: 4px 8px; text-align: left; }

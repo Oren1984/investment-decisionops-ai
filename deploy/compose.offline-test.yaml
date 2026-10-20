@@ -1,0 +1,22 @@
+# Offline-after-setup test (plan §18.3). Overlay for an ISOLATED project only, e.g.:
+#   docker compose -p decisionops-e2e --env-file <e2e.env> -f compose.yaml -f deploy/compose.offline-test.yaml up -d
+# Every backend service is moved onto an internal network with no route out (no internet, no host Ollama).
+# Only `web` (static files + reverse proxy, no outbound calls) also joins the default network so its published
+# port stays reachable from the host for the E2E browser. Revert by running `up -d` without this file.
+networks:
+  offline:
+    internal: true
+
+services:
+  db:
+    networks: [offline]
+  migrate:
+    networks: [offline]
+  api:
+    networks: [offline]
+  worker:
+    networks: [offline]
+  api-demo:
+    networks: [offline]
+  web:
+    networks: [offline, default]

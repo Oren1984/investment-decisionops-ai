@@ -1,0 +1,84 @@
+# --- Secrets, credentials and personal account files: never commit ---------------------------------------------
+.env
+.env.*
+*.env
+!.env.example
+.admin-user
+.admin-user.*
+*.admin-user
+secrets/
+*.local.md
+*login*.txt
+*credentials*.txt
+*.pem
+*.key
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+encryption.key
+
+# --- Personal data and runtime state ---------------------------------------------------------------------------
+backups/
+data/
+*.dump
+*.sql.gz
+
+# --- Logs, temporary and debug files ---------------------------------------------------------------------------
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.swp
+*~
+_repro*
+*.debug
+
+# --- Python ---------------------------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- Node / frontend; test credentials and generated test reports ----------------------------------------------
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+frontend/e2e/.auth/
+junit*.xml
+coverage/
+
+# --- Terraform (state may hold infrastructure details; tfvars hold personal values) ------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl.bak
+crash.log
+
+# --- OS / editors ----------------------------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Local-only project notes (session handoff, original brief): never commit
+docs/internal/

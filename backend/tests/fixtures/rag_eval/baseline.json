@@ -1,0 +1,9 @@
+{
+  "method": "fts",
+  "answerable": 33,
+  "unanswerable": 8,
+  "recall_at_5": 0.9697,
+  "mrr": 0.9697,
+  "abstained_when_unanswerable": 1.0,
+  "answered_when_answerable": 1.0
+}

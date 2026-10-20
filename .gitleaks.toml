@@ -1,0 +1,16 @@
+title = "decisionops gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and synthetic test values"
+paths = [
+  '''\.env\.example$''',
+  '''PROJECT_PLAN\.md$''',
+  '''Investment_DecisionOps_AI_Project_Brief\.md$''',
+]
+regexes = [
+  '''change-me[-a-z]*''',
+  '''synthetic-test-[a-z0-9-]+''',
+]
