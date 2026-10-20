@@ -170,6 +170,25 @@ def test_meeting_link_can_be_edited_and_collaborators_cannot_change_it(owner):
     assert collab.delete(path).status_code == 403
 
 
+
+def test_meeting_companion_shows_collaborators_only_notes_shared_with_them(owner):
+    """A meeting share does not expose the meeting's notes: each note needs its own grant (same rule as /shared)."""
+    m = _link(owner, "https://zoom.us/j/222", "zoom").json()
+    private = owner.post("/api/notes", {"title": "Owner-only note", "body": "private body", "meeting_id": m["id"]}).json()
+    shared = owner.post("/api/notes", {"title": "Shared note", "body": "shared body", "meeting_id": m["id"]}).json()
+    collab, collab_id = make_collaborator(owner)
+    assert collab.get(f"/api/meetings/{m['id']}/companion").status_code == 403  # no meeting grant yet
+
+    owner.post("/api/shares", {"object_type": "meeting", "object_id": m["id"], "grantee_id": collab_id})
+    assert collab.get(f"/api/meetings/{m['id']}/companion").json()["notes"] == []
+
+    owner.post("/api/shares", {"object_type": "note", "object_id": shared["id"], "grantee_id": collab_id})
+    notes = collab.get(f"/api/meetings/{m['id']}/companion").json()["notes"]
+    assert [n["id"] for n in notes] == [shared["id"]]
+    assert "private body" not in collab.get(f"/api/meetings/{m['id']}/companion").text
+    # The owner still sees every note on the meeting.
+    assert {n["id"] for n in owner.get(f"/api/meetings/{m['id']}/companion").json()["notes"]} == {private["id"], shared["id"]}
+
 def _zoom(handler):
     from app.modules.meetings.providers import ZoomProvider
 

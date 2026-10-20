@@ -197,8 +197,10 @@ def companion(meeting_id: uuid.UUID, db: DB = Depends(get_db, scope="function"),
     if m.decision_id and (principal.sees_owner_data or can_access_object(db, principal, "decision", m.decision_id)):
         d = db.get(Decision, m.decision_id)
         decision = {"id": str(d.id), "title": d.title, "status": d.status, "question": d.question}
+    # A meeting share does not cover its notes: each note needs its own grant, as on /shared.
     notes = [{"id": str(n.id), "title": n.title, "body": n.body, "updated_at": n.updated_at}
-             for n in db.scalars(select(Note).where(Note.meeting_id == m.id).order_by(Note.created_at))]
+             for n in db.scalars(select(Note).where(Note.meeting_id == m.id).order_by(Note.created_at))
+             if principal.sees_owner_data or can_access_object(db, principal, "note", n.id)]
     users = {u.id: u.display_name for u in db.scalars(select(User))}
     items = [{"id": str(a.id), "title": a.title, "status": a.status, "due_at": a.due_at,
               "assignee": users.get(a.assignee_id) if a.assignee_id else None,
